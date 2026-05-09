@@ -73,7 +73,7 @@ resource "null_resource" "yum-commands" {
       "sudo ln -sf /usr/local/bin/ansible /usr/bin/ansible",
       "sudo ln -sf /usr/local/bin/ansible-pull /usr/bin/ansible-pull",
 
-      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv"
+      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv || true"
     ]
   }
 }
