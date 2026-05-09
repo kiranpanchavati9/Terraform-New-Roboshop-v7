@@ -41,7 +41,12 @@ resource "aws_route53_record" "instances" {
   name    = "${each.key}-dev"
   type    = var.dns_type
   ttl     = var.ttl
-  records = [aws_instance.instances[each.key].private_ip]
+
+  records = each.key == "frontend" ? [
+    aws_instance.instances[each.key].public_ip
+  ] : [
+    aws_instance.instances[each.key].private_ip
+  ]
 }
 
 # ─────────────────────────────────────────
