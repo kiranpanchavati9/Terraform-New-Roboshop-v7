@@ -62,10 +62,9 @@ resource "null_resource" "yum-commands" {
     }
 
     inline = [
-      "sudo yum update -y",
-      "sudo yum install -y nginx",
-      "sudo systemctl start nginx",
-      "sudo systemctl enable nginx"
+      "sudo dnf install python3.13-pip -y",
+      "sudo pip3.11 install ansible",
+      "ansible-pull -i localhost, -U "
     ]
   }
 }
