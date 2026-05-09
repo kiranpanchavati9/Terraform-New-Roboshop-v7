@@ -64,7 +64,9 @@ resource "null_resource" "yum-commands" {
     inline = [
       "sudo dnf install python3 python3-pip git -y",
       "sudo pip3 install ansible",
-      "sudo ln -s /usr/local/bin/ansible-pull /usr/bin/ansible-pull || true",
+
+      "sudo ln -sf /usr/local/bin/ansible /usr/bin/ansible",
+      "sudo ln -sf /usr/local/bin/ansible-pull /usr/bin/ansible-pull",
 
       "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev"
     ]
