@@ -2,20 +2,13 @@
   Project      : RobotShop Dev Environment
   Description  : Creates EC2 instances and Route53 DNS records for each microservice
                  using for_each meta-argument with dynamic length of components variable
-  AMI          : Configured via var.ami
-  Type         : Configured via var.instance_type
-  SG           : Configured via var.vpc_sg_id
-  Components   : Configured via var.components (frontend, mongodb, catalogue, redis,
-                 user, cart, mysql, shipping, rabbitmq, payment)
-  DNS Zone     : Configured via var.zone_id
-  DNS Type     : Configured via var.dns_type
-  TTL          : Configured via var.ttl
 */
 
 # ─────────────────────────────────────────
 # EC2 Instances for each microservice
 # ─────────────────────────────────────────
 resource "aws_instance" "instances" {
+
   for_each = var.components
 
   ami                    = var.ami
@@ -32,9 +25,10 @@ resource "aws_instance" "instances" {
 }
 
 # ─────────────────────────────────────────
-# Route53 DNS Records for each microservice
+# Route53 DNS Records
 # ─────────────────────────────────────────
 resource "aws_route53_record" "instances" {
+
   for_each = var.components
 
   zone_id = var.zone_id
@@ -50,8 +44,7 @@ resource "aws_route53_record" "instances" {
 }
 
 # ─────────────────────────────────────────
-# Null Resource - SSH into each EC2 and
-# install required packages
+# Post Configuration using remote-exec
 # ─────────────────────────────────────────
 resource "null_resource" "post-config" {
 
@@ -60,6 +53,10 @@ resource "null_resource" "post-config" {
   depends_on = [
     aws_instance.instances
   ]
+
+  triggers = {
+    always_run = timestamp()
+  }
 
   connection {
     type        = "ssh"
@@ -73,24 +70,28 @@ resource "null_resource" "post-config" {
 
     inline = [
 
-      # Wait for cloud-init
-      "while sudo fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1; do sleep 5; done",
+      # Wait for cloud-init/rpm locks
+      "while sudo lsof /var/lib/rpm/.rpm.lock >/dev/null 2>&1; do sleep 5; done",
 
-      # Wait for instance boot
+      # Wait for server boot completion
       "sleep 60",
 
-      # Install dependencies
+      # Install required packages
       "sudo dnf install -y python3 python3-pip git",
 
-      # Verify ansible
+      # Install ansible via pip
       "sudo pip3 install ansible",
 
-      # Execute playbook
-      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev"
-    ]
-  }
+      # Create symlinks
+      "sudo ln -sf /usr/local/bin/ansible /usr/bin/ansible",
 
-  triggers = {
-    always_run = timestamp()
+      "sudo ln -sf /usr/local/bin/ansible-pull /usr/bin/ansible-pull",
+
+      # Verify ansible
+      "ansible --version",
+
+      # Execute ansible-pull
+      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv"
+    ]
   }
 }
