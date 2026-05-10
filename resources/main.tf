@@ -55,7 +55,7 @@ resource "null_resource" "post-config" {
   ]
 
   triggers = {
-    always_run = timestamp()
+    instance_id = aws_instance.instances[each.key].id
   }
 
   connection {
