@@ -53,27 +53,44 @@ resource "aws_route53_record" "instances" {
 # Null Resource - SSH into each EC2 and
 # install required packages
 # ─────────────────────────────────────────
-resource "null_resource" "yum-commands" {
+resource "null_resource" "post-config" {
+
   for_each = var.components
 
-  depends_on = [aws_instance.instances]
+  depends_on = [
+    aws_instance.instances
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = file(pathexpand("~/.ssh/${var.key_name}"))
+    host        = aws_instance.instances[each.key].public_ip
+    timeout     = "5m"
+  }
 
   provisioner "remote-exec" {
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = file(pathexpand("~/.ssh/${var.key_name}"))
-      host        = aws_instance.instances[each.key].public_ip
-    }
 
     inline = [
-      "sudo dnf install python3 python3-pip git -y",
-      "sudo pip3 install ansible",
 
-      "sudo ln -sf /usr/local/bin/ansible /usr/bin/ansible",
-      "sudo ln -sf /usr/local/bin/ansible-pull /usr/bin/ansible-pull",
+      # Wait for cloud-init
+      "while sudo fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1; do sleep 5; done",
 
-      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv || true"
+      # Wait for instance boot
+      "sleep 60",
+
+      # Install dependencies
+      "sudo dnf install -y python3 python3-pip git ansible",
+
+      # Verify ansible
+      "ansible --version",
+
+      # Execute playbook
+      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev"
     ]
+  }
+
+  triggers = {
+    always_run = timestamp()
   }
 }
