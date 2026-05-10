@@ -80,10 +80,10 @@ resource "null_resource" "post-config" {
       "sleep 60",
 
       # Install dependencies
-      "sudo dnf install -y python3 python3-pip git ansible",
+      "sudo dnf install -y python3 python3-pip git",
 
       # Verify ansible
-      "ansible --version",
+      "sudo pip3 install ansible",
 
       # Execute playbook
       "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev"
