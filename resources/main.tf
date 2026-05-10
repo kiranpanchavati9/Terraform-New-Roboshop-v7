@@ -64,7 +64,7 @@ resource "null_resource" "post-config" {
   connection {
     type        = "ssh"
     user        = "ec2-user"
-    private_key = file(pathexpand("~/.ssh/${var.key_name}"))
+    private_key = file("/root/.ssh/roboshop-dev.pem")
     host        = aws_instance.instances[each.key].public_ip
     timeout     = "5m"
   }
