@@ -91,7 +91,7 @@ resource "null_resource" "post-config" {
       "ansible --version",
 
       # Execute ansible-pull
-      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv || true"
+      "ansible-pull -i localhost, -U https://github.com/kiranpanchavati9/Roboshop-Ansible-Template-New.git playbooks/${each.key}.yml -e env=dev -vvv; exit 0"
     ]
   }
 }
