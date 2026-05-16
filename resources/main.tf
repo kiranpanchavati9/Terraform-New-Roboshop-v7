@@ -77,15 +77,7 @@ resource "null_resource" "post-config" {
       "sleep 60",
 
       # Install required packages
-      "sudo dnf install -y python3 python3-pip git",
-
-      # Install ansible via pip
-      "sudo pip3 install ansible",
-
-      # Create symlinks
-      "sudo ln -sf /usr/local/bin/ansible /usr/bin/ansible",
-
-      "sudo ln -sf /usr/local/bin/ansible-pull /usr/bin/ansible-pull",
+      "sudo dnf install -y python3 git ansible",
 
       # Verify ansible
       "ansible --version",
